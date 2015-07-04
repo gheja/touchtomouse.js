@@ -1,0 +1,154 @@
+<html>
+	<head>
+		<title>touchtomouse.js example</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no" />
+		<script type="text/javascript" src="touchtomouse.js"></script>
+		<style type="text/css">
+			body,
+			html
+			{
+				padding: 0;
+				font-size: 8pt;
+			}
+			
+			#box
+			{
+				position: absolute;
+				top: 100px;
+				left: 250px;
+				width: 200px;
+				height: 200px;
+				background: #0088ff;
+				cursor: default;
+			}
+		</style>
+		<script type="text/javascript">
+			var obj, ttm, dragging, dragStart, dragStartMouse, pos, log;
+			
+			function onClick(event)
+			{
+				event.preventDefault();
+				log.push("click");;
+				this.style.background = "rgb(" + Math.round(Math.random() * 255) + "," + Math.round(Math.random() * 255) + "," + Math.round(Math.random() * 255) + ")";
+			}
+			
+			function onMouseDown(event)
+			{
+				event.preventDefault();
+				log.push("mouse down");;
+				dragging = true;
+				dragStart = {
+					top: pos.top,
+					left: pos.left,
+					mouseScreenX: event.screenX,
+					mouseScreenY: event.screenY
+				};
+			}
+			
+			function onMouseUp(event)
+			{
+				event.preventDefault();
+				log.push("mouse up");;
+				dragging = false;
+			}
+			
+			function onMouseMove(event)
+			{
+				event.preventDefault();
+				log.push("mouse move");;
+				if (dragging)
+				{
+					pos.left = dragStart.left + (event.screenX - dragStart.mouseScreenX);
+					pos.top = dragStart.top + (event.screenY - dragStart.mouseScreenY);
+					
+					updateObjectPosition();
+				}
+			}
+			
+			function onMouseWheel(event)
+			{
+				var i;
+				event.preventDefault();
+				log.push("mouse wheel " + event.wheelDelta);;
+				
+				i = event.wheelDelta / 2;
+				
+				if (pos.size + i < 50)
+				{
+					return;
+				}
+				
+				pos.size = pos.size + i;
+				pos.left = pos.left - i/2;
+				pos.top = pos.top - i/2;
+				
+				updateObjectPosition();
+			}
+			
+			function updateObjectPosition()
+			{
+				obj.style.left = pos.left;
+				obj.style.top = pos.top;
+				obj.style.width = pos.size;
+				obj.style.height = pos.size;
+			}
+			
+			function updateStatus()
+			{
+				var i, s;
+				s = "";
+				
+				// this.log += "mouse move<br/>";
+				for (i=0; i<10; i++)
+				{
+					b = ttm.touches[i];
+					s += b.screenStartX + ", " + b.screenStartY + ", " + b.screenX + ", " + b.screenY + ", " + (b.active ? "active" : "inactive") + "<br/>";
+				}
+				
+				s += "distance: " + ttm.distance.toFixed(2) + ", ";
+				s += "distance delta: " + ttm.distanceDelta.toFixed(2) + ", ";
+				s += "mode: " + ttm.mode + "<br/>";
+				
+				s += "<hr/>";
+				
+				for (i=Math.max(log.length - 10, 0); i<log.length; i++)
+				{
+					s += i + ": " + log[i] + "<br/>";
+				}
+				
+				document.getElementById("status").innerHTML = s;
+			}
+			
+			function init()
+			{
+				obj = document.getElementById("box");
+				
+				obj.addEventListener("mousedown", onMouseDown.bind(obj), false);
+				obj.addEventListener("mouseup", onMouseUp.bind(obj), false);
+				obj.addEventListener("click", onClick.bind(obj), false);
+				window.addEventListener("mousemove", onMouseMove.bind(obj), false);
+				obj.addEventListener("mousewheel", onMouseWheel.bind(obj), false);
+				
+				ttm = new TouchToMouse();
+				ttm.attach(obj);
+				
+				pos = {
+					top: 100,
+					left: 250,
+					size: 200
+				};
+				
+				log = [];
+				
+				updateObjectPosition();
+				window,setInterval(updateStatus, 1000 / 30);
+			}
+			
+			window.addEventListener("load", init);
+		</script>
+	</head>
+	<body>
+		<div id="status">...</div>
+		<div id="box"></div>
+	</body>
+</html>
